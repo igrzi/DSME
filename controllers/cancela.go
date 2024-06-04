@@ -8,10 +8,10 @@ import (
 
 func BarrierOpen(c *gin.Context) {
 
-	fmt.Println("Open cancela")
+	fmt.Println("Cancela abrindo")
 }
 
 func BarrierClose(c *gin.Context) {
 
-	fmt.Println("Close cancela")
+	fmt.Println("Cancela fechando")
 }
