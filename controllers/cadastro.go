@@ -3,6 +3,7 @@ package controllers
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/igrzi/DSME/initializers"
@@ -11,64 +12,109 @@ import (
 )
 
 func UserCreate(c *gin.Context) {
+	userCPF, err := strconv.Atoi(c.Query("cpf"))
+	userName := c.Query("name")
+	userCategory := c.Query("category")
 
-	fmt.Println("Batata doce!")
-
-	// Get data of user from request body
-	var userData struct {
-		Cpf      int
-		Name     string
-		Category string
+	if err != nil {
+		c.JSON(400, "cpf parameter can't be empty and must be a number!")
+		return
 	}
-	c.Bind(&userData)
 
-	if !checkIfCPFisRegistered(userData.Cpf) {
+	if checkIfCPFisNotRegistered(userCPF) {
 		// Se o CPF não estiver registrado, cria o usuário
-		user := models.User{Cpf: userData.Cpf, Name: userData.Name, Category: userData.Category}
-		result := initializers.DB.Create(&user)
+		user := models.User{Cpf: userCPF, Name: userName, Category: userCategory}
+		initializers.DB.Create(&user)
+		initializers.DB.Table("users").Where("cpf = ?", userCPF).Update("deleted_at", nil)
 
-		if result.Error != nil {
-			c.Status(400)
-			return
-		}
-
-		// Return a 200 status
-
-		c.Status(200)
+		c.JSON(200, "User created successfully!")
 	} else {
-		fmt.Println()
 		c.JSON(409, "User already on database")
 	}
 }
 
 func UserShow(c *gin.Context) {
+	var users []models.User
 
-	fmt.Println("UserShow")
+	// Query the database to get all users
+	result := initializers.DB.Find(&users)
+
+	if result.Error != nil {
+		c.JSON(500, gin.H{"error": result.Error.Error()})
+		return
+	}
+
+	// Create a slice to hold the user details
+	var userDetails []gin.H
+	for _, user := range users {
+		userDetails = append(userDetails, gin.H{
+			"name":     user.Name,
+			"cpf":      user.Cpf,
+			"category": user.Category,
+		})
+	}
+
+	// Return the list of user details as JSON with specified field order
+	c.JSON(200, gin.H{"users": userDetails})
 }
 
+// UserUpdate is a controller that updates a user CATEGORY in the database
 func UserUpdate(c *gin.Context) {
+	userCPF, err := strconv.Atoi(c.Query("cpf"))
+	userCategory := c.Query("category")
 
-	fmt.Println("UserUpdate")
+	if err != nil {
+		c.JSON(400, "cpf parameter can't be empty and must be a number!")
+		return
+	}
+
+	if userCategory == "" {
+		c.JSON(400, "category parameters can't be empty!")
+	}
+
+	if !checkIfCPFisNotRegistered(userCPF) {
+		// Se o CPF estiver registrado, faz o update da categoria do usuário
+		initializers.DB.Table("users").Where("cpf = ?", userCPF).Update("category", userCategory)
+
+		c.JSON(200, "User updated successfully!")
+	} else {
+		c.JSON(409, "User not found on our database")
+	}
 }
 
 func UserDelete(c *gin.Context) {
+	userCPF, err := strconv.Atoi(c.Query("cpf"))
 
-	fmt.Println("UserDelete")
+	if err != nil {
+		c.JSON(400, "cpf parameter can't be empty and must be a number!")
+		return
+	}
+
+	if !checkIfCPFisNotRegistered(userCPF) {
+		// Se o CPF estiver registrado, faz o update da categoria do usuário
+		initializers.DB.Table("users").Where("cpf = ?", userCPF).Delete(&models.User{})
+
+		c.JSON(200, "User deleted successfully!")
+	} else {
+		c.JSON(409, "User not found on our database")
+	}
 }
 
-func checkIfCPFisRegistered(cpf int) bool {
+func checkIfCPFisNotRegistered(cpf int) bool {
 	var user models.User
 
 	result := initializers.DB.Table("users").Where("cpf = ?", cpf).First(&user)
+
+	// If the user is not found in the database, return true
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return true
+	}
+
+	// Log other possible errors and return false
 	if result.Error != nil {
-		// Log any errors
-		fmt.Println("Error checking if CPF is registered:", result.Error)
+		fmt.Println(result.Error)
 		return false
 	}
 
-	// Log the user found (if any)
-	fmt.Println("User found:", user)
-
-	// If the user is found, return true; otherwise, return false
-	return !errors.Is(result.Error, gorm.ErrRecordNotFound)
+	return false
 }
