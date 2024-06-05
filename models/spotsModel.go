@@ -4,5 +4,6 @@ import "gorm.io/gorm"
 
 type Spots struct {
 	gorm.Model
-	Quantity int
+	QuantityAvailable int
+	MaxQuantity       int
 }

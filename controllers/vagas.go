@@ -8,7 +8,7 @@ import (
 	"github.com/igrzi/DSME/models"
 )
 
-// This is used to adjust the amount of spots available, or, if there isn't a record on the database, it will create a new spot
+// AdjustAmountSpot adjusts the amount of spots available or creates a new spot record if none exists
 func AdjustAmountSpot(c *gin.Context) {
 	quantitySpots, err := strconv.Atoi(c.Query("quantity"))
 	if err != nil {
@@ -16,15 +16,15 @@ func AdjustAmountSpot(c *gin.Context) {
 		return
 	}
 
-	// Check if there's a record on the database
+	// Check if there's a record in the database
 	var spot models.Spots
 	result := initializers.DB.First(&spot)
 	if result.Error != nil {
 		if result.Error.Error() == "record not found" {
 			// If no record is found, create a new record
-			newSpot := models.Spots{Quantity: quantitySpots}
+			newSpot := models.Spots{QuantityAvailable: quantitySpots, MaxQuantity: quantitySpots}
 			initializers.DB.Create(&newSpot)
-			c.JSON(200, gin.H{"message": "New spot record created successfully!", "quantity": newSpot.Quantity})
+			c.JSON(200, gin.H{"message": "New spot record created successfully!", "quantity_available": newSpot.QuantityAvailable, "max_quantity": newSpot.MaxQuantity})
 		} else {
 			// Handle other potential errors
 			c.JSON(500, gin.H{"Internal error": result.Error.Error()})
@@ -32,10 +32,13 @@ func AdjustAmountSpot(c *gin.Context) {
 		return
 	}
 
-	// If a record is found, update the quantity of spots
-	spot.Quantity = quantitySpots
+	// If a record is found, update the max quantity and adjust the available spots accordingly
+	spot.MaxQuantity = quantitySpots
+	if spot.QuantityAvailable > spot.MaxQuantity {
+		spot.QuantityAvailable = spot.MaxQuantity
+	}
 	initializers.DB.Save(&spot)
-	c.JSON(200, gin.H{"message": "Spot record updated successfully!", "quantity": spot.Quantity})
+	c.JSON(200, gin.H{"message": "Spot record updated successfully!", "quantity_available": spot.QuantityAvailable, "max_quantity": spot.MaxQuantity})
 }
 
 func OcupySpot(c *gin.Context) {
@@ -47,9 +50,9 @@ func OcupySpot(c *gin.Context) {
 		return
 	}
 
-	// Decrease the Quantity by 1 if available
-	if spots.Quantity > 0 {
-		spots.Quantity -= 1
+	// Decrease the QuantityAvailable by 1 if available
+	if spots.QuantityAvailable > 0 {
+		spots.QuantityAvailable -= 1
 	} else {
 		c.JSON(400, gin.H{"error": "All spots are currently occupied"})
 		return
@@ -58,7 +61,7 @@ func OcupySpot(c *gin.Context) {
 	// Save the updated spots back to the database
 	initializers.DB.Save(&spots)
 
-	c.JSON(200, gin.H{"message": "One spot used!", "available_spots": spots.Quantity})
+	c.JSON(200, gin.H{"message": "One spot used!", "available_spots": spots.QuantityAvailable})
 }
 
 func VacateSpot(c *gin.Context) {
@@ -70,16 +73,16 @@ func VacateSpot(c *gin.Context) {
 		return
 	}
 
-	// Decrease the Quantity by 1 if available
-	if spots.Quantity > 0 {
-		spots.Quantity -= 1
+	// Increase the QuantityAvailable by 1 if it's less than MaxQuantity
+	if spots.QuantityAvailable < spots.MaxQuantity {
+		spots.QuantityAvailable += 1
 	} else {
-		c.JSON(400, gin.H{"error": "All spots are currently occupied"})
+		c.JSON(400, gin.H{"error": "All spots are currently available"})
 		return
 	}
 
 	// Save the updated spots back to the database
 	initializers.DB.Save(&spots)
 
-	c.JSON(200, gin.H{"message": "One spot used!", "available_spots": spots.Quantity})
+	c.JSON(200, gin.H{"message": "One spot vacated!", "available_spots": spots.QuantityAvailable})
 }

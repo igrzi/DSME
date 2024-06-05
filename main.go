@@ -35,7 +35,7 @@ func main() {
 
 	// localhost:8040
 	// Vagas routes
-	router.POST("/vagas/create", controllers.AdjustAmountSpot) // Cria uma vaga
+	router.POST("/vagas/adjust", controllers.AdjustAmountSpot) // Cria uma vaga
 	router.POST("/vagas/ocuppy", controllers.OcupySpot)        // Ocupa uma vaga
 	router.POST("/vagas/vacate", controllers.VacateSpot)       // Libera uma vaga
 
