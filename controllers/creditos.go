@@ -17,6 +17,9 @@ func AddCredits(c *gin.Context) {
 
 	credits := models.Credits{Cpf: userCPF, CreditAmount: userCredits}
 	initializers.DB.Create(&credits)
+	// If I try to add credits to a user that already exists, it will give me an error
+	// because this only creates the user with the credits, and when i try to add credits
+	// it trys to create a new user with the same CPF, giving an error
 
 	c.JSON(200, "Credits added successfully!")
 }
