@@ -29,14 +29,15 @@ func main() {
 	router.DELETE("/usuario/delete", controllers.UserDelete) // Deleta um usuário
 
 	// localhost:8030
-	// Creditos routes
+	// Creditos routes 				== 				DONE
 	router.POST("/creditos/add", controllers.AddCredits) // Adiciona créditos
 	router.POST("/creditos/use", controllers.UseCredits) // Usa créditos
 
 	// localhost:8040
 	// Vagas routes
-	router.POST("/vagas/ocuppy", controllers.OcuppySpot) // Ocupa uma vaga
-	router.POST("/vagas/vacate", controllers.VacateSpot) // Libera uma vaga
+	router.POST("/vagas/create", controllers.AdjustAmountSpot) // Cria uma vaga
+	router.POST("/vagas/ocuppy", controllers.OcupySpot)        // Ocupa uma vaga
+	router.POST("/vagas/vacate", controllers.VacateSpot)       // Libera uma vaga
 
 	// Cancela routes 				== 				DONE
 	router.POST("/cancela/open", controllers.BarrierOpen)   // Abre a cancela
