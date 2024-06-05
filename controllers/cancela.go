@@ -1,17 +1,15 @@
 package controllers
 
 import (
-	"fmt"
-
 	"github.com/gin-gonic/gin"
 )
 
 func BarrierOpen(c *gin.Context) {
 
-	fmt.Println("Cancela abrindo")
+	c.JSON(200, "Barrier opened successfully!")
 }
 
 func BarrierClose(c *gin.Context) {
 
-	fmt.Println("Cancela fechando")
+	c.JSON(200, "Barrier closed successfully!")
 }

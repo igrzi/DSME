@@ -8,6 +8,18 @@ import (
 	"github.com/igrzi/DSME/models"
 )
 
+func ShowSpots(c *gin.Context) {
+	// Find the spots record
+	var spots models.Spots
+	result := initializers.DB.First(&spots)
+	if result.Error != nil {
+		c.JSON(404, gin.H{"error": "Spots record not found"})
+		return
+	}
+
+	c.JSON(200, gin.H{"quantity_available": spots.QuantityAvailable, "max_quantity": spots.MaxQuantity})
+}
+
 // AdjustAmountSpot adjusts the amount of spots available or creates a new spot record if none exists
 func AdjustAmountSpot(c *gin.Context) {
 	quantitySpots, err := strconv.Atoi(c.Query("quantity"))
@@ -41,7 +53,7 @@ func AdjustAmountSpot(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "Spot record updated successfully!", "quantity_available": spot.QuantityAvailable, "max_quantity": spot.MaxQuantity})
 }
 
-func OcupySpot(c *gin.Context) {
+func OccuppySpot(c *gin.Context) {
 	// Find the spots record
 	var spots models.Spots
 	result := initializers.DB.First(&spots)

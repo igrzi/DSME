@@ -18,13 +18,14 @@ func main() {
 	// Access routes
 	router.POST("/acesso/entry", controllers.AccessEntry) // Registra um acesso na cancela
 	// This will talk to localhost:8040, if there's a spot available, subtract one from the total spots
+
 	router.POST("/acesso/leave", controllers.AccessLeave) // Registra uma saída na cancela
 	// This will talk to localhost:8030, and subtract a credit from the CPF
 
 	// localhost:8020 THIS IS ISOLATED FROM THE REST
 	// Cadastro routes 				== 				DONE
-	router.POST("/usuario/create", controllers.UserCreate)   // Cria um usuário
 	router.GET("/usuario", controllers.UserShow)             // Mostra os usuários
+	router.POST("/usuario/create", controllers.UserCreate)   // Cria um usuário
 	router.PUT("/usuario/update", controllers.UserUpdate)    // Atualiza um usuário
 	router.DELETE("/usuario/delete", controllers.UserDelete) // Deleta um usuário
 
@@ -34,9 +35,10 @@ func main() {
 	router.POST("/creditos/use", controllers.UseCredits) // Usa créditos
 
 	// localhost:8040
-	// Vagas routes
+	// Vagas routes 				== 				DONE
+	router.GET("/vagas", controllers.ShowSpots)                // Mostra as vagas
 	router.POST("/vagas/adjust", controllers.AdjustAmountSpot) // Cria uma vaga
-	router.POST("/vagas/ocuppy", controllers.OcupySpot)        // Ocupa uma vaga
+	router.POST("/vagas/occuppy", controllers.OccuppySpot)     // Ocupa uma vaga
 	router.POST("/vagas/vacate", controllers.VacateSpot)       // Libera uma vaga
 
 	// Cancela routes 				== 				DONE

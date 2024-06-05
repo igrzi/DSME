@@ -9,17 +9,32 @@ import (
 )
 
 func AddCredits(c *gin.Context) {
+	// Parse CPF and credits from query parameters
 	userCPF, err := strconv.Atoi(c.Query("cpf"))
-	DealWithError(err, c)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Invalid CPF"})
+		return
+	}
 
 	userCredits, err := strconv.Atoi(c.Query("credits"))
-	DealWithError(err, c)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Invalid credits amount"})
+		return
+	}
 
-	credits := models.Credits{Cpf: userCPF, CreditAmount: userCredits}
-	initializers.DB.Create(&credits)
-	// If I try to add credits to a user that already exists, it will give me an error
-	// because this only creates the user with the credits, and when i try to add credits
-	// it trys to create a new user with the same CPF, giving an error
+	// Find if user with given CPF exists
+	var credits models.Credits
+	result := initializers.DB.Where("cpf = ?", userCPF).First(&credits)
+
+	if result.Error != nil {
+		// If user does not exist, create a new record
+		credits = models.Credits{Cpf: userCPF, CreditAmount: userCredits}
+		initializers.DB.Create(&credits)
+	} else {
+		// If user exists, update their credits
+		credits.CreditAmount += userCredits
+		initializers.DB.Save(&credits)
+	}
 
 	c.JSON(200, "Credits added successfully!")
 }
